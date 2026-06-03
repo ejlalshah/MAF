@@ -4,11 +4,10 @@ Base tool class + concrete tools + ToolRouter (permission enforcement).
 
 Design rule: agents never call tools directly — they go through ToolRouter.
 This makes permission enforcement centralised and auditable.
+Web search uses DuckDuckGo (free, no API key).
 """
 from __future__ import annotations
 import asyncio
-import subprocess
-import tempfile
 import os
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Set
@@ -48,27 +47,59 @@ class BaseTool(ABC):
 
 
 # ---------------------------------------------------------------------------
-# WebSearchTool
+# WebSearchTool — DuckDuckGo (free, no API key required)
 # ---------------------------------------------------------------------------
 
 class WebSearchTool(BaseTool):
     name        = "web_search"
-    description = "Search the web and return a list of result summaries."
+    description = "Search the web using DuckDuckGo and return a list of result summaries."
 
     def __init__(self, api_key: Optional[str] = None):
-        self._api_key = api_key
+        self._api_key = api_key  # unused, kept for interface compat
 
     async def run(self, query: str, num_results: int = 5) -> ToolResult:
-        # In production: call SerpAPI / Brave Search / Tavily
-        # Dev stub returns realistic-looking placeholder results
         logger.info("web_search", extra={"query": query})
-        await asyncio.sleep(0.1)   # simulate network
-        results = [
-            {"title": f"Result {i+1} for '{query}'", "url": f"https://example.com/{i}", "snippet": f"Snippet {i+1}…"}
-            for i in range(min(num_results, 5))
-        ]
-        metrics.increment("tool_calls", tool=self.name)
-        return ToolResult.ok(results, query=query)
+        try:
+            results = await asyncio.get_event_loop().run_in_executor(
+                None, self._ddg_search, query, num_results
+            )
+            metrics.increment("tool_calls", tool=self.name)
+            return ToolResult.ok(results, query=query)
+        except Exception as exc:
+            logger.warning("web_search_error", extra={"error": str(exc)})
+            # Fallback stub so agents can continue even without network
+            fallback = [
+                {
+                    "title":   f"Result {i+1} for '{query}'",
+                    "url":     f"https://duckduckgo.com/?q={query.replace(' ', '+')}",
+                    "snippet": f"Search result {i+1} — DuckDuckGo unavailable: {exc}",
+                }
+                for i in range(min(num_results, 3))
+            ]
+            metrics.increment("tool_calls", tool=self.name)
+            return ToolResult.ok(fallback, query=query, source="fallback")
+
+    @staticmethod
+    def _ddg_search(query: str, num_results: int) -> List[Dict[str, str]]:
+        # Try the new package name first, then old name as fallback
+        for module_name in ("ddgs", "duckduckgo_search"):
+            try:
+                mod  = __import__(module_name, fromlist=["DDGS"])
+                DDGS = mod.DDGS
+                results = []
+                with DDGS() as ddgs:
+                    for r in ddgs.text(query, max_results=num_results):
+                        results.append({
+                            "title":   r.get("title", ""),
+                            "url":     r.get("href", ""),
+                            "snippet": r.get("body", ""),
+                        })
+                return results
+            except ImportError:
+                continue
+            except Exception as exc:
+                raise RuntimeError(f"DuckDuckGo search error: {exc}")
+        raise RuntimeError("Neither 'ddgs' nor 'duckduckgo_search' is installed.")
 
 
 # ---------------------------------------------------------------------------
@@ -110,6 +141,7 @@ class PythonExecutionTool(BaseTool):
     TIMEOUT = 30   # seconds
 
     async def run(self, code: str) -> ToolResult:
+        import tempfile
         with tempfile.NamedTemporaryFile(suffix=".py", mode="w", delete=False) as tmp:
             tmp.write(code)
             tmp_path = tmp.name
@@ -187,7 +219,6 @@ class GitHubTool(BaseTool):
 # Tool Router
 # ---------------------------------------------------------------------------
 
-# Permission map: which tools each agent type is allowed to call
 AGENT_PERMISSIONS: Dict[AgentType, Set[str]] = {
     AgentType.RESEARCH:     {"web_search", "file"},
     AgentType.CODING:       {"python_exec", "file", "github"},
@@ -201,8 +232,7 @@ AGENT_PERMISSIONS: Dict[AgentType, Set[str]] = {
 
 class ToolRouter:
     """
-    Central registry.  Agents call tools through this — never directly.
-
+    Central registry. Agents call tools through this — never directly.
     Usage:
         result = await tool_router.call("web_search", AgentType.RESEARCH, query="AI news")
     """
@@ -220,7 +250,6 @@ class ToolRouter:
         agent_type: AgentType,
         **kwargs,
     ) -> ToolResult:
-        # Permission check
         allowed = AGENT_PERMISSIONS.get(agent_type, set())
         if tool_name not in allowed:
             msg = f"Agent '{agent_type}' is not permitted to use tool '{tool_name}'"

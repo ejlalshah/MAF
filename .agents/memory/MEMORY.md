@@ -1,0 +1,2 @@
+- [FRIDAY-MAF architecture](friday-maf-arch.md) — flat root files are originals; real package lives in core/ and config/; ports: backend=8000, dashboard=5000
+- [Provider & search setup](friday-maf-providers.md) — Ollama default (free local); ddgs package for DuckDuckGo; graceful stubs when offline

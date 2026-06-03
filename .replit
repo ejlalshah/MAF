@@ -17,7 +17,23 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
+args = "Backend API"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
 args = "Start application"
+
+[[workflows.workflow]]
+name = "Backend API"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "uvicorn main:app --host 0.0.0.0 --port 8000"
+waitForPort = 8000
 
 [[workflows.workflow]]
 name = "Start application"
@@ -25,7 +41,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "uvicorn main:app --host 0.0.0.0 --port 5000 --reload"
+args = "streamlit run dashboard/app.py --server.port 5000 --server.address 0.0.0.0 --server.headless true"
 waitForPort = 5000
 
 [workflows.workflow.metadata]
@@ -37,4 +53,4 @@ externalPort = 80
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
+run = ["bash", "-c", "uvicorn main:app --host 0.0.0.0 --port 8000 & streamlit run dashboard/app.py --server.port 5000 --server.address 0.0.0.0 --server.headless true"]

@@ -1,0 +1,215 @@
+You are working inside a Replit environment.
+
+A full GitHub repository for FRIDAY-MAF (Multi-Agent Framework) has already been imported.
+
+This is NOT a new project.
+
+It is a partially completed production-grade multi-agent orchestration system with:
+
+* Communicator Agent
+* Planner Agent
+* Orchestrator Agent
+* Worker Agents (Research, Coding, Data Analyst)
+* Critic System
+* Recovery Agent
+* Event Bus
+* State Machine
+* Memory Layer
+* Tool Router
+* FastAPI backend
+* Test suite
+
+Your job is to make it FULLY FUNCTIONAL, AUTONOMOUS, and INTERACTIVE with a dashboard.
+
+DO NOT REWRITE OR SIMPLIFY THE ARCHITECTURE.
+
+────────────────────────────────────
+PHASE 1 — ENVIRONMENT SETUP
+────────────────────────────────────
+
+1. Inspect repository structure
+2. Install dependencies (Python 3.10+)
+3. Fix missing imports and broken modules
+4. Ensure system runs without external paid APIs
+
+If any external API exists:
+REPLACE with free/local alternatives:
+
+* LLM APIs → Ollama (localhost:11434)
+* Embeddings → sentence-transformers (all-MiniLM-L6-v2)
+* Vector DB → ChromaDB or FAISS
+* Web search → DuckDuckGo search library or scraping fallback
+* Storage → SQLite or local JSON
+
+NO paid APIs allowed.
+
+────────────────────────────────────
+PHASE 2 — SYSTEM VERIFICATION
+────────────────────────────────────
+
+Run full test suite.
+
+Fix all issues in order:
+
+1. Serialization / Pydantic issues
+2. State machine logic errors
+3. Event bus async issues
+4. Memory persistence bugs
+5. Tool routing problems
+6. Agent communication issues
+
+Rules:
+
+* Fix bugs only
+* Do NOT change architecture
+* Do NOT simplify system
+
+────────────────────────────────────
+PHASE 3 — STREAMLIT DASHBOARD (NEW)
+────────────────────────────────────
+
+Create a Streamlit dashboard:
+
+FILE: dashboard/app.py
+
+It must include:
+
+1. TASK INPUT PANEL
+
+* Text input: "Enter task"
+* Submit button → POST /task
+* Display task_id
+
+2. LIVE TASK MONITOR
+
+* Show all active tasks
+* Show status:
+  CREATED / PLANNING / EXECUTING / REVIEWING / COMPLETED / FAILED
+* Auto-refresh every 2–3 seconds
+
+3. AGENT EVENT STREAM
+
+* Live feed of:
+  TASK_CREATED
+  TASK_ASSIGNED
+  NODE_COMPLETED
+  CRITIC_REJECTED
+  RETRY_TRIGGERED
+
+4. DAG VISUALIZATION
+
+* Show task DAG graph
+* Show node status (pending / running / done / failed)
+
+5. TASK DETAIL VIEW
+
+* Planner output
+* Worker outputs
+* Critic feedback
+* Final result
+* Memory writes
+
+6. SYSTEM HEALTH PANEL
+
+* API health
+* Event bus status
+* Memory status
+* Active agents
+* Error rate
+
+────────────────────────────────────
+PHASE 4 — AUTONOMY MODE (CORE UPGRADE)
+────────────────────────────────────
+
+Implement persistent autonomous execution:
+
+A. PERSISTENCE LAYER
+
+* Store all tasks in SQLite or JSON
+* Save:
+  task state
+  DAG
+  node progress
+  retries
+  results
+  timestamps
+
+B. BACKGROUND EXECUTION LOOP
+
+* Runs every 2–5 seconds
+* Picks pending tasks
+* Executes next DAG node
+* Persists state immediately
+* Emits events to event bus
+
+C. RESUME ON STARTUP
+
+* Load unfinished tasks
+* Resume from last completed node
+* Continue execution automatically
+
+D. FAILURE RECOVERY
+
+* Retry failed worker tasks (max retries enforced)
+* Route failures to Recovery Agent
+* Timeout stuck tasks
+* Never lose progress on restart
+
+E. EVENT BUS PERSISTENCE
+
+* Store all events
+* Allow replay for debugging
+* Dashboard reads live + history
+
+────────────────────────────────────
+PHASE 5 — BACKEND INTEGRATION RULES
+────────────────────────────────────
+
+Use only:
+
+* POST /task
+* GET /task/{id}
+* GET /health
+
+If missing endpoints:
+ADD minimally without changing architecture.
+
+────────────────────────────────────
+PHASE 6 — STARTUP BEHAVIOR
+────────────────────────────────────
+
+On startup:
+
+1. Load persisted tasks
+2. Resume unfinished workflows
+3. Start background execution loop
+4. Start FastAPI server
+5. Start Streamlit dashboard
+
+System must behave like a self-healing autonomous engine.
+
+────────────────────────────────────
+CRITICAL RULES
+────────────────────────────────────
+
+* DO NOT remove agents
+* DO NOT flatten into single LLM pipeline
+* DO NOT remove event bus or state machine
+* DO NOT simplify architecture
+* DO NOT redesign system
+
+Only add:
+
+* dashboard
+* persistence
+* autonomy loop
+* recovery mechanisms
+
+────────────────────────────────────
+FINAL GOAL
+
+The system must behave like:
+
+"A continuously running multi-agent execution engine where users submit tasks, and the system executes them autonomously in the background, while being fully observable through a live dashboard."
+
+END.

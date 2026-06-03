@@ -5,9 +5,13 @@ Shared Pydantic models and enums used across the entire framework.
 from __future__ import annotations
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 from pydantic import BaseModel, Field
+
+
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 #----------------------------------------------------------------------------------------------------
@@ -58,16 +62,16 @@ class SubTask(BaseModel):
     task_id: str = Field(default_factory=lambda: str(uuid4()))
     task_description: str
     required_agent: AgentType
-    dependancies: List[str] = Field(default_factory=list)
+    dependencies: List[str] = Field(default_factory=list)
     status: TaskStatus = TaskStatus.CREATED
     result: Optional[Any] = None
     error: Optional[str] = None
     retry_count: int = 0
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=_now)
+    updated_at: datetime = Field(default_factory=_now)
 
     def mark_updated(self) -> None:
-        self.updated_at = datetime.utcnow()
+        self.updated_at = _now()
 
 
 class Task(BaseModel):
@@ -79,11 +83,11 @@ class Task(BaseModel):
     final_result:  Optional[Any] = None
     error:         Optional[str] = None
     metadata:      Dict[str, Any] = Field(default_factory=dict)
-    created_at:    datetime       = Field(default_factory=datetime.utcnow)
-    updated_at:    datetime       = Field(default_factory=datetime.utcnow)
- 
+    created_at:    datetime       = Field(default_factory=_now)
+    updated_at:    datetime       = Field(default_factory=_now)
+
     def mark_updated(self) -> None:
-        self.updated_at = datetime.utcnow()
+        self.updated_at = _now()
 
 
 #----------------------------------------------------------------------------------------------------
@@ -119,7 +123,7 @@ class Event(BaseModel):
     event_type: EventType
     task_id: str
     payload: Dict[str, Any] = Field(default_factory=dict)
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=_now)
 
 
 #----------------------------------------------------------------------------------------------------

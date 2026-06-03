@@ -71,12 +71,19 @@ class BaseAgent(ABC):
 
         return response.content
 
-    async def think_json(self, user_message: str, context: Optional[str] = None) -> Dict[str, Any]:
-        """think() but parses and returns the JSON response."""
+    async def think_json(self, user_message: str, context: Optional[str] = None):
+        """think() but parses and returns the JSON response (dict or list)."""
         raw = await self.think(user_message, context=context, json_mode=True)
         # Strip markdown fences if model adds them
-        cleaned = raw.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
-        return json.loads(cleaned)
+        cleaned = raw.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.lstrip("`").lstrip("json").strip()
+        if cleaned.endswith("```"):
+            cleaned = cleaned[: cleaned.rfind("```")].strip()
+        parsed = json.loads(cleaned)
+        if isinstance(parsed, str):
+            return {"result": parsed, "status": "unexpected_string"}
+        return parsed
 
     async def emit(self, event_type: EventType, task_id: str, **payload) -> None:
         event = Event(event_type=event_type, task_id=task_id, payload=payload)

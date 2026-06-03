@@ -45,7 +45,7 @@ You do not make decisions yourself; you route tasks and collect results."""
         Main orchestration loop.
         Executes the DAG respecting dependencies, applies critics, handles recovery.
         """
-        sm = TaskStateMachine(task.task_id)
+        sm = TaskStateMachine(task.task_id, task.status)
 
         try:
             sm.transition(TaskStatus.EXECUTING)
@@ -72,6 +72,9 @@ You do not make decisions yourself; you route tasks and collect results."""
 
             # All subtasks done — assemble final result
             task.final_result = self._assemble_result(task, completed_results)
+            sm.transition(TaskStatus.REVIEWING)
+            task.status = TaskStatus.REVIEWING
+            task.mark_updated()
             sm.transition(TaskStatus.COMPLETED)
             task.status = TaskStatus.COMPLETED
             task.mark_updated()

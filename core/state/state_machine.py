@@ -39,9 +39,9 @@ class TaskStateMachine:
     Use one instance per task — do not share across tasks.
     """
 
-    def __init__(self, task_id: str):
+    def __init__(self, task_id: str, initial_state: TaskStatus = TaskStatus.CREATED):
         self.task_id     = task_id
-        self.state       = TaskStatus.CREATED
+        self.state       = initial_state
         self.retry_count = 0
         self._transitions_log: list = []
 
