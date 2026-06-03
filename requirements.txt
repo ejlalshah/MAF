@@ -15,3 +15,12 @@ redis[asyncio]>=5.0.0
 pytest>=8.2.0
 pytest-asyncio>=0.23.0
 pytest-cov>=5.0.0
+fastapi
+httpx
+pydantic
+pydantic-settings
+pytest
+pytest-asyncio
+pytest-cov
+redis
+uvicorn[standard]
